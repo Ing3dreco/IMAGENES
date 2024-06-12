@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            max-width: 100%;
+            height: auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .loading-message {
+            position: absolute;
+            top: calc(57%);
+            left: calc(37%);
+            text-align: center;
+            color: #007bff;
+            font-weight: bold;
+            display: none;
+        }
+        .loading-circle {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #007bff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="https://raw.githubusercontent.com/Ing3dreco/IMAGENES/main/LOGO.svg" alt="Logo de la empresa">
+        </div>
+        <h1>Generar PDF</h1>
+        <form id="pdfForm">
+            <label for="image_url">URL de la imagen:</label>
+            <input type="text" id="image_url" name="image_url" value="https://raw.githubusercontent.com/Ing3dreco/IMAGENES/main/Ticket.png">
+            <label for="num_copies">Cantidad Tickets:</label>
+            <input type="number" id="num_copies" name="num_copies" value="">
+            <label for="numbers">Números de Tickets:</label>
+            <input type="text" id="numbers" name="numbers" value="">
+            <label for="name">Nombre Completo:</label>
+            <input type="text" id="name" name="name" value="">
+            <button type="submit">Generar PDF</button>
+        </form>
+        <div class="loading-message" id="loadingMessage">
+            <div class="loading-circle"></div>
+            Generando Tickets...
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('pdfForm');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const loadingCircle = document.querySelector('.loading-circle');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Validación básica del formulario
+            const image_url = document.getElementById('image_url').value;
+            const num_copies = document.getElementById('num_copies').value;
+            const numbers = document.getElementById('numbers').value;
+            const name = document.getElementById('name').value;
+
+            if (!image_url || !num_copies || !numbers || !name) {
+                alert('Por favor, complete todos los campos.');
+                return;
+            }
+
+            loadingMessage.style.display = 'block';
+            loadingCircle.style.animationPlayState = 'running';
+
+            const formData = new FormData(form);
+            const requestData = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('https://pdf-api.glitch.me/generate-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (response.ok) {
+                    loadingCircle.style.animationPlayState = 'paused';
+                    loadingMessage.innerText = 'Tickets Generados';
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    loadingMessage.style.display = 'none'; // Ocultar el mensaje de carga después de la descarga
+                } else {
+                    console.error('Error:', response.statusText);
+                    loadingMessage.innerText = 'Error al generar los tickets';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                loadingMessage.innerText = 'Error al generar los tickets';
+            } finally {
+                loadingCircle.style.animationPlayState = 'running'; // Reiniciar la animación
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+              
